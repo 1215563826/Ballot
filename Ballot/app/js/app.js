@@ -29,7 +29,8 @@ App = {
 	bindEvents: function() {
 		$(document).on('click', '.btn-post', App.handlePost);
 		$(document).on('click', '.btn-vote-a', App.handleAffirmVote);
-		//$(document).on('click', '.btn-vote-b', App.handleOpposeVote);
+		$(document).on('click', '.btn-vote-b', App.handleOpposeVote);
+		$(document).on('click', '.btn-end', App.handleEndPost);
 	},
 
 	loadPosts: function(length) {
@@ -50,6 +51,7 @@ App = {
 					postTemplate.find('img').attr('src', data[i].picture);
 					postTemplate.find('.btn-vote-a').attr('data-id', i);
 					postTemplate.find('.btn-vote-b').attr('data-id', i);
+					postTemplate.find('.btn-end').attr('data-id', i);
 
 					postsRow.append(postTemplate.html());
 				}
@@ -142,6 +144,38 @@ App = {
 
 				voteInstance.vote(voteId, false, {from: account}).then(function() {
 					voteInstance.Vote(function(e, r) {
+						if(!e) {
+							console.log(r.args);
+							alert(r.args.message);
+						}
+					})
+				})
+			}).then(function(result) {
+				App.loadPosts();
+			}).catch(function(err) {
+				console.log(err.message);
+			});
+		});
+	},
+
+	handleEndPost: function(event) {
+		event.preventDefault();
+
+		var voteId = parseInt($(event.target).data('id'));
+
+		var voteInstance;
+
+		web3.eth.getAccounts(function(error, accounts) {
+			if(error) {
+				console.log(err);
+			}
+			var account = accounts[0];
+
+			window.App.contracts.Ballot.deployed().then(function(instance) {
+				voteInstance = instance;
+
+				voteInstance.endProposal(voteId, {from: account}).then(function() {
+					voteInstance.EndProposal(function(e, r) {
 						if(!e) {
 							console.log(r.args);
 							alert(r.args.message);
